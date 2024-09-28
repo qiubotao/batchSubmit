@@ -1,5 +1,5 @@
 class Website:
-    def __init__(self, url, name, description, email, category, user_name, pricing_model, user_first_name, image_path, content):
+    def __init__(self, url, name, description, email, category, user_name, pricing_model, user_first_name, image_path, content, category_for_aitoolnet):
         self.url = url
         self.name = name
         self.description = description
@@ -10,7 +10,7 @@ class Website:
         self.user_first_name = user_first_name
         self.image_path = image_path
         self.content = content
-
+        self.category_for_aitoolnet = category_for_aitoolnet
 
 
 # 定义结构化数据
@@ -24,7 +24,9 @@ my_website = Website(
     user_first_name="Q",
     pricing_model="Freemium",
     image_path="/Users/viola/Downloads/logo6.png",  # 替换为实际的文件路径
-    content="keyFeature:\n -Discover various AI video generation platforms and their technologies. For instance, Minimax AI excels in generating high-quality, expressive videos from complex text, while Luma AI shines in 3D generation and animation. Learn about their features, underlying technologies, advantages, and limitations. \n - Explore AI video generation tools like Minimax AI and Luma AI, which offer a range of powerful tools and features to help users easily create high-quality video content. Compare the results of different AI video generation tools. "
+    content="keyFeature:\n -Discover various AI video generation platforms and their technologies. For instance, Minimax AI excels in generating high-quality, expressive videos from complex text, while Luma AI shines in 3D generation and animation. Learn about their features, underlying technologies, advantages, and limitations. \n - Explore AI video generation tools like Minimax AI and Luma AI, which offer a range of powerful tools and features to help users easily create high-quality video content. Compare the results of different AI video generation tools. ",
+    #  不同网站的定制化
+    category_for_aitoolnet="Video"
 
 )
 

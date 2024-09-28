@@ -39,9 +39,9 @@ def submit_to_all_platforms(website):
         # MergeekAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # AiyoubucuoAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功
         # WechaletAdapter(website) , # 已明确知道提交成功但未能成功监控提交成功
-        # AitoolnetAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
+        AitoolnetAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
-        HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
+        # HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
     ]
 
     for adapter in adapters:

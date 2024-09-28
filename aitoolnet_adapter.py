@@ -34,7 +34,7 @@ class AitoolnetAdapter(SubmissionAdapter):
             # 填写表单字段
             self._fill_form_field(driver, 'dr_title', self.website.name, "Name")
             self._fill_form_field(driver, 'dr_website', self.website.url, "Website")
-            self._select_category(driver, 'Image Editing')
+            self._select_category(driver, self.website.category_for_aitoolnet)
             self._select_pricing(driver, self.website.pricing_model)
             self._fill_form_field(driver, 'dr_description', self.website.description, "Description")
             self._fill_form_field(driver, 'dr_content', self.website.content, "Content")

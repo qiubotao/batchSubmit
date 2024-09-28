@@ -53,7 +53,7 @@ class NextoolAdapter(SubmissionAdapter):
             print("表单填写完成")
 
             # 提交表单
-            # self._submit_form(driver)
+            self._submit_form(driver)
 
             # 等待并捕获结果
             # self._capture_submission_result(driver)

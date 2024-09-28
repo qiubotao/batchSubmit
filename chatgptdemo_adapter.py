@@ -13,6 +13,9 @@ class ChatGPTDemoAdapter(SubmissionAdapter):
         if headless:
             options.add_argument('--headless')
         
+                # 默认打开控制台
+        options.add_argument('--auto-open-devtools-for-tabs')
+     
         driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
         service = Service(driver_path)
         

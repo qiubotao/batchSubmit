@@ -56,7 +56,7 @@ class DesignToolsAdapter(SubmissionAdapter):
             self._check_submission_success(driver)
 
             # 等待用户确认后再关闭浏览器
-            # input("请检查提交结果，按回车键关闭浏览器...")
+            input("请检查提交结果，按回车键关闭浏览器...")
 
         except Exception as e:
             print(f"发生错误: {str(e)}")

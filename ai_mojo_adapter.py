@@ -13,6 +13,9 @@ class AiMojoToolsAdapter(SubmissionAdapter):
         if headless:
             options.add_argument('--headless')
         
+                # 默认打开控制台
+        options.add_argument('--auto-open-devtools-for-tabs')
+     
         driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
         service = Service(driver_path)
         
@@ -39,11 +42,12 @@ class AiMojoToolsAdapter(SubmissionAdapter):
             print("表单填写完成")
 
             # 提交表单
-            self._submit_form(driver)
+            # self._submit_form(driver)
 
             # 等待并捕获结果
-            self._capture_submission_result(driver)
+            # self._capture_submission_result(driver)
 
+            input("请检查提交结果，按回车键关闭浏览器...")
         except Exception as e:
             print(f"发生错误: {str(e)}")
         finally:

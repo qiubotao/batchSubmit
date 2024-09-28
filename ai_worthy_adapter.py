@@ -8,9 +8,16 @@ from submission_adapter import SubmissionAdapter
 import time
 
 class AIWorthyAdapter(SubmissionAdapter):
-    def submit(self):
+    def submit(self, headless=False):
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
+        
+        if headless:
+            options.add_argument('--headless')
+
+        
+        # 默认打开控制台
+        options.add_argument('--auto-open-devtools-for-tabs')
+        
         
         driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
         service = Service(driver_path)
@@ -40,6 +47,8 @@ class AIWorthyAdapter(SubmissionAdapter):
 
             # 等待并捕获结果
             self._capture_submission_result(driver)
+
+            input("请检查提交结果，按回车键关闭浏览器...")
 
         except Exception as e:
             print(f"发生错误: {str(e)}")

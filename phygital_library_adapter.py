@@ -7,10 +7,15 @@ from selenium.webdriver.chrome.service import Service
 from submission_adapter import SubmissionAdapter
 
 class PhygitalLibraryAdapter(SubmissionAdapter):
-    def submit(self):
+    def submit(self, headless=False):
         options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
+        # options.add_argument('--headless')
+        if headless:
+            options.add_argument('--headless')
         
+        # 默认打开控制台
+        options.add_argument('--auto-open-devtools-for-tabs')
+   
         driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
         service = Service(driver_path)
         
@@ -26,14 +31,18 @@ class PhygitalLibraryAdapter(SubmissionAdapter):
             print("页面已加载，正在填写表单...")
 
             # 填写表单字段
-            self._fill_form_field(driver, 'input[name="Try out"]', self.website.url, "Try out")
-            self._fill_form_field(driver, 'textarea[name="Description"]', self.website.description, "Description")
-            self._fill_form_field(driver, 'textarea[name="Для агрегатора: Submitted by"]', self.website.email, "Submitted by")
+            self._fill_form_field(driver, "//input[@placeholder='Link to the tool']", self.website.url, "Try out")
+            self._fill_form_field(driver, "//textarea[contains(@placeholder, 'Describe the tool')]", self.website.description, "Description")
+            self._fill_form_field(driver, "//textarea[contains(@placeholder, 'Share your social media handle')]", self.website.email, "Submitted by")
 
             print("表单填写完成")
 
             # 提交表单
             self._submit_form(driver)
+
+
+            # 等待用户确认后再关闭浏览器
+            input("请检查提交结果，按回车键关闭浏览器...")
 
         except Exception as e:
             print(f"发生错误: {str(e)}")
@@ -41,9 +50,12 @@ class PhygitalLibraryAdapter(SubmissionAdapter):
             print("正在关闭浏览器...")
             driver.quit()
 
-    def _fill_form_field(self, driver, selector, value, field_name):
+    def _fill_form_field(self, driver, xpath, value, field_name):
         try:
-            field = driver.find_element(By.CSS_SELECTOR, selector)
+            field = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.XPATH, xpath))
+            )
+            field.clear()
             field.send_keys(value)
             print(f"已填写 '{field_name}' 字段")
         except Exception as e:
@@ -52,7 +64,7 @@ class PhygitalLibraryAdapter(SubmissionAdapter):
     def _submit_form(self, driver):
         try:
             submit_button = WebDriverWait(driver, 10).until(
-                EC.element_to_be_clickable((By.ID, 'sw-form-capture-submit-btn'))
+                EC.element_to_be_clickable((By.XPATH, "//button[@type='submit' and contains(text(), 'Send')]"))
             )
             submit_button.click()
             print("表单已提交")
@@ -61,10 +73,6 @@ class PhygitalLibraryAdapter(SubmissionAdapter):
                 EC.invisibility_of_element_located((By.CSS_SELECTOR, '.spinner-border'))
             )
             
-            # success_icon = driver.find_element(By.CSS_SELECTOR, '.fa-check:not(.d-none)')
-            # if success_icon:
             print("提交成功！")
-            # else:
-                # print("提交可能未成功，请检查。")
         except Exception as e:
             print(f"提交表单时出错: {str(e)}")

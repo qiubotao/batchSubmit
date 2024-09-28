@@ -2,7 +2,7 @@ import requests
 from submission_adapter import SubmissionAdapter
 
 class AiNavigationAdapter(SubmissionAdapter):
-    def submit(self):
+    def submit(self, headless=False):
         data = {
             'url': self.website.url,
             'name': self.website.name,

@@ -43,7 +43,7 @@ class AitoolnetAdapter(SubmissionAdapter):
             print("表单填写完成")
 
             # 提交表单
-            self._submit_form(driver)
+            # self._submit_form(driver)
 
             # 检查提交是否成功
             # self._check_submission_success(driver)

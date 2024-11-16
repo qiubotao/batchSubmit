@@ -31,12 +31,17 @@ class SupertoolsAdapter(SubmissionAdapter):
 
             print("页面已加载，正在填写表单...")
 
-            # 填写表单字段
+            # 第一页表单字段
             self._fill_form_field(driver, "//input[@placeholder='Tool name ']", self.website.name, "Tool name")
             self._fill_form_field(driver, "//textarea[@placeholder='One to two sentences max.']", self.website.description, "Tool description")
             self._fill_form_field(driver, "//input[@placeholder='Free, paid, or both']", self.website.pricing_model, "Price")
             self._fill_form_field(driver, "//input[@placeholder='Which category fits your tool best?']", self.website.category, "Category")
             self._fill_form_field(driver, "//input[@placeholder='Link to your tool home page']", self.website.url, "Tool link")
+
+            # 点击下一页按钮
+            self._click_next_button(driver)
+
+            # 第二页表单字段
             self._fill_form_field(driver, "//input[@placeholder='Optional']", '', "Affiliate registration link")
             self._fill_form_field(driver, "//input[@placeholder='@companytwitterhandle ']", '', "Tool Twitter handle")
             self._fill_form_field(driver, "//input[@placeholder='Tool creator email']", self.website.email, "Tool creator email")
@@ -44,8 +49,12 @@ class SupertoolsAdapter(SubmissionAdapter):
 
             print("表单填写完成")
 
-            # 等待用户确认后再关闭浏览器
-            input("请检查提交结果，按回车键关闭浏览器...")
+            # 等待用户确认后再提交表单
+            input("请检查表单内容，按回车键提交...")
+            self._submit_form(driver)
+
+            # 检查提交是否成功
+            self._check_submission_success(driver)
 
         except Exception as e:
             print(f"发生错误: {str(e)}")
@@ -130,3 +139,13 @@ class SupertoolsAdapter(SubmissionAdapter):
                 print("提交失败或未找到成功消息")
         except Exception as e:
             print(f"检查提交成功时出错: {str(e)}")
+
+    def _click_next_button(self, driver):
+        try:
+            next_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH, "//button[contains(., 'Next')]"))
+            )
+            next_button.click()
+            print("已点击下一页按钮")
+        except Exception as e:
+            print(f"点击下一页按钮时出错: {str(e)}")

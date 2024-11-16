@@ -20,6 +20,7 @@ from aitoolnet_adapter import AitoolnetAdapter  # 新增的适配器
 from supertools_adapter import SupertoolsAdapter  # 新增的适配器
 from humanornot_adapter import HumanOrNotAdapter  # 新增的适配器
 from active_search_results_adapter import ActiveSearchResultsAdapter
+from aitoolsdirectory_adapter import AitoolsdirectoryAdapter
 
 def submit_to_all_platforms(website):
     adapters = [
@@ -32,9 +33,9 @@ def submit_to_all_platforms(website):
         # AiMojoToolsAdapter(website) #  不成功，后面再看
         # ChatGPTDemoAdapter(website),   # 已明确知道提交成功
         # DesignToolsAdapter(website),   # 已明确知道提交成功
-        NextoolAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功。 提交到这里了
+        # NextoolAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功。 提交到这里了
         # InfrabaseAdapter(website),  # 已明确知道提交成功，能成功监控提交成功
-        # TallyAdapter(website),  # 新增的适配器，  未能成功，但是能正常上传logo 了
+        # TallyAdapter(website),  # 新增的适配器，  需要做些手动点击，但是能正常上传logo 了
         # AbabToolsAdapter(website),  # 加载时间过长，无法成功
         # MergeekAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # AiyoubucuoAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功
@@ -43,6 +44,7 @@ def submit_to_all_platforms(website):
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
         # HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
         # ActiveSearchResultsAdapter(website)  # 新增的适配器
+        AitoolsdirectoryAdapter(website)
     ]
 
     for adapter in adapters:

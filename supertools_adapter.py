@@ -31,20 +31,23 @@ class SupertoolsAdapter(SubmissionAdapter):
 
             print("页面已加载，正在填写表单...")
 
-            # 第一页表单字段
-            self._fill_form_field(driver, "//input[@placeholder='Tool name ']", self.website.name, "Tool name")
-            self._fill_form_field(driver, "//textarea[@placeholder='One to two sentences max.']", self.website.description, "Tool description")
-            self._fill_form_field(driver, "//input[@placeholder='Free, paid, or both']", self.website.pricing_model, "Price")
-            self._fill_form_field(driver, "//input[@placeholder='Which category fits your tool best?']", self.website.category, "Category")
-            self._fill_form_field(driver, "//input[@placeholder='Link to your tool home page']", self.website.url, "Tool link")
+            # 使用实际的input ID
+            form_fields = {
+                "486c4892-a743-40a3-ba5a-d5755a7b230a": (self.website.name, "Tool name"),
+                "de8ac9df-c278-4172-a1bf-841dd34d5ed1": (self.website.description, "Tool description"),
+                "2e2dc17c-809a-40e0-9dd8-5333897e2ef2": (self.website.pricing_model, "Price"),
+                "44766190-9401-408d-9ea7-6aacc6e84b76": (self.website.category, "Category"),
+                "3d2761a8-dee9-4b54-b3c1-667e838b29da": (self.website.url, "Tool link"),
+                "5b142219-6c77-4b9b-a828-dba208afa801": ("", "Affiliate registration link"),
+                "d0bb218f-706b-4ab6-899c-cfd6b9eb583d": ("", "Tool Twitter handle"),
+                "b9496427-555a-41f4-88b7-b547d7036196": (self.website.email, "Tool creator email")
+            }
 
-            # 点击下一页按钮
-            self._click_next_button(driver)
+            # 填写所有表单字段
+            for field_id, (value, field_name) in form_fields.items():
+                self._fill_form_field(driver, field_id, value, field_name)
 
-            # 第二页表单字段
-            self._fill_form_field(driver, "//input[@placeholder='Optional']", '', "Affiliate registration link")
-            self._fill_form_field(driver, "//input[@placeholder='@companytwitterhandle ']", '', "Tool Twitter handle")
-            self._fill_form_field(driver, "//input[@placeholder='Tool creator email']", self.website.email, "Tool creator email")
+            # 上传图片
             self._upload_image(driver, self.website.image_path)
 
             print("表单填写完成")
@@ -64,46 +67,42 @@ class SupertoolsAdapter(SubmissionAdapter):
 
     def _wait_for_page_load(self, driver, timeout=30):
         try:
-            # 等待页面标题
-            WebDriverWait(driver, timeout).until(EC.title_contains("Submit"))
+            # 等待表单容器加载
+            WebDriverWait(driver, timeout).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "sc-c94a0b56-0"))
+            )
             
-            # 等待表单出现
-            WebDriverWait(driver, timeout).until(EC.presence_of_element_located((By.TAG_NAME, "form")))
+            # 等待进度条加载
+            WebDriverWait(driver, timeout).until(
+                EC.presence_of_element_located((By.TAG_NAME, "progress"))
+            )
             
-            # 使用JavaScript检查页面加载状态
-            is_ready = driver.execute_script("return document.readyState") == "complete"
-            
-            if not is_ready:
-                print("页面加载可能未完成，但将继续执行...")
+            # 等待第一个输入框加载
+            WebDriverWait(driver, timeout).until(
+                EC.presence_of_element_located((By.CLASS_NAME, "sc-e7c900b2-0"))
+            )
             
         except Exception as e:
             print(f"等待页面加载时出错: {str(e)}")
             print("将尝试继续执行...")
 
-    def _fill_form_field(self, driver, xpath, value, field_name):
+    def _fill_form_field(self, driver, field_id, value, field_name):
         try:
-            # 增加等待时间和重试逻辑
-            for _ in range(3):  # 尝试3次
-                try:
-                    field = WebDriverWait(driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, xpath))
-                    )
-                    field.clear()
-                    field.send_keys(value)
-                    print(f"已填写 '{field_name}' 字段")
-                    break
-                except:
-                    print(f"填写 '{field_name}' 字段失败，正在重试...")
-                    time.sleep(2)
-            else:
-                print(f"填写 '{field_name}' 字段失败")
+            # 使用CSS选择器通过ID定位元素
+            field = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, f"#{field_id}"))
+            )
+            field.clear()
+            field.send_keys(value)
+            print(f"已填写 '{field_name}' 字段")
         except Exception as e:
             print(f"填写 '{field_name}' 字段时出错: {str(e)}")
 
     def _upload_image(self, driver, image_path):
         try:
+            # 使用更精确的选择器
             file_input = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.XPATH, "//input[@type='file']"))
+                EC.presence_of_element_located((By.CSS_SELECTOR, "input[type='file'][aria-label='Resource thumbnail image ']"))
             )
             file_input.send_keys(os.path.abspath(image_path))
             print("已上传缩略图")
@@ -112,17 +111,12 @@ class SupertoolsAdapter(SubmissionAdapter):
 
     def _submit_form(self, driver):
         try:
-            submit_button = driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
-            
-            # 滚动到元素可见位置
+            # 使用更精确的选择器
+            submit_button = WebDriverWait(driver, 10).until(
+                EC.element_to_be_clickable((By.CSS_SELECTOR, "button.sc-5b8353b7-1.bXEisP"))
+            )
             driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
-            
-            # 等待元素可点击
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"]')))
-            
-            # 使用 JavaScript 直接点击元素
             driver.execute_script("arguments[0].click();", submit_button)
-            
             print("表单已提交")
         except Exception as e:
             print(f"提交表单时出错: {str(e)}")

@@ -25,6 +25,7 @@ from airtable_adapter import AirtableAdapter
 from insidr_adapter import InsidrAdapter
 from  ai_directory_adapter import AiDirectoryAdapter
 from ai_tool_navigation_adapter import AiToolNavigationAdapter
+from ai_hunter_adapter import AiHunterAdapter
 
 def submit_to_all_platforms(website):
     adapters = [
@@ -42,18 +43,19 @@ def submit_to_all_platforms(website):
         # TallyAdapter(website),  # 新增的适配器，  需要做些手动点击，但是能正常上传logo 了
         # AbabToolsAdapter(website),  # 加载时间过长，无法成功
         # MergeekAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
-        # AiyoubucuoAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功
+        # AiyoubucuoAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # WechaletAdapter(website) , # 已明确知道提交成功但未能成功监控提交成功
         # AitoolnetAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
-        # HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
-        # ActiveSearchResultsAdapter(website)  # 新增的适配器
-        # AitoolsdirectoryAdapter(website)
+        # HumanOrNotAdapter(website),  # 已明确知道提交成功，能成功监控提交成功
+        # ActiveSearchResultsAdapter(website),  # 新增的适配器
+        # AitoolsdirectoryAdapter(website),  # 还不行
         #  上述 有 20 个
-        # AirtableAdapter(website)  # 不适合， 是开源仓库
+        # AirtableAdapter(website),  # 不适合， 是开源仓库
         # InsidrAdapter(website)  # 有点特殊， 需要按住按钮才能进行下一步的推进
         # AiDirectoryAdapter(website)        # 要点击验证
-        AiToolNavigationAdapter(website),
+        # AiToolNavigationAdapter(website),
+        # AiHunterAdapter(website),  # 需要加点人工的操作
 
     ]
 

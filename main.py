@@ -21,6 +21,10 @@ from supertools_adapter import SupertoolsAdapter  # 新增的适配器
 from humanornot_adapter import HumanOrNotAdapter  # 新增的适配器
 from active_search_results_adapter import ActiveSearchResultsAdapter
 from aitoolsdirectory_adapter import AitoolsdirectoryAdapter
+from airtable_adapter import AirtableAdapter
+from insidr_adapter import InsidrAdapter
+from  ai_directory_adapter import AiDirectoryAdapter
+from ai_tool_navigation_adapter import AiToolNavigationAdapter
 
 def submit_to_all_platforms(website):
     adapters = [
@@ -44,7 +48,13 @@ def submit_to_all_platforms(website):
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
         # HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
         # ActiveSearchResultsAdapter(website)  # 新增的适配器
-        AitoolsdirectoryAdapter(website)
+        # AitoolsdirectoryAdapter(website)
+        #  上述 有 20 个
+        # AirtableAdapter(website)  # 不适合， 是开源仓库
+        # InsidrAdapter(website)  # 有点特殊， 需要按住按钮才能进行下一步的推进
+        # AiDirectoryAdapter(website)        # 要点击验证
+        AiToolNavigationAdapter(website),
+
     ]
 
     for adapter in adapters:

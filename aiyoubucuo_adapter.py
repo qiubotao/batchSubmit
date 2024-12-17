@@ -46,7 +46,9 @@ class AiyoubucuoAdapter(SubmissionAdapter):
             
             # 提交评论
             submit_button = driver.find_element(By.ID, "submit")
-            submit_button.click()
+            # submit_button.click()
+            # 等待用户确认后再关闭浏览器
+            input("请检查提交结果，按回车键关闭浏览器...")
             
             # 等待提交结果
             # time.sleep(5)

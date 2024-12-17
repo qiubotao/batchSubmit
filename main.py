@@ -26,37 +26,44 @@ from insidr_adapter import InsidrAdapter
 from  ai_directory_adapter import AiDirectoryAdapter
 from ai_tool_navigation_adapter import AiToolNavigationAdapter
 from ai_hunter_adapter import AiHunterAdapter
+from aimojo_adapter import AiMojoAdapter
+from dropyourai_adapter import DropYourAIAdapter
+from futuretools_adapter import FutureToolsAdapter
+from fastpedia_adapter import FastpediaAdapter
 
 def submit_to_all_platforms(website):
     adapters = [
         # PhygitalLibraryAdapter(website),
         # AiNavigationAdapter(website),
         # OtherPlatformAdapter(website)  # 不成功的
-        # MagicBoxToolsAdapter(website),    # 需要验证是否成功
+        # MagicBoxToolsAdapter(website),    # 需要验证是否成功, 待会再试试
         # AIWorthyAdapter(website),
-        # AILibToolsAdapter(website)    # 问题： 未选选择好复选框。 加一点手动操作
-        # AiMojoToolsAdapter(website) #  不成功，后面再看
+        # AILibToolsAdapter(website),    # 问题： 未选选择好复选框。 加一点手动操作
+        # AiMojoToolsAdapter(website), #  不成功，后面再看
         # ChatGPTDemoAdapter(website),   # 已明确知道提交成功
         # DesignToolsAdapter(website),   # 已明确知道提交成功
-        # NextoolAdapter(website)  # 已明确知道提交成功，但未能成功监控提交成功。 提交到这里了
+        # NextoolAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功。 提交到这里了  要付费，搞不起
         # InfrabaseAdapter(website),  # 已明确知道提交成功，能成功监控提交成功
         # TallyAdapter(website),  # 新增的适配器，  需要做些手动点击，但是能正常上传logo 了
         # AbabToolsAdapter(website),  # 加载时间过长，无法成功
         # MergeekAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # AiyoubucuoAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
         # WechaletAdapter(website) , # 已明确知道提交成功但未能成功监控提交成功
-        # AitoolnetAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功
+        # AitoolnetAdapter(website),  # 已明确知道提交成功，但未能成功监控提交成功， 要付费了
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
         # HumanOrNotAdapter(website),  # 已明确知道提交成功，能成功监控提交成功
         # ActiveSearchResultsAdapter(website),  # 新增的适配器
         # AitoolsdirectoryAdapter(website),  # 还不行
         #  上述 有 20 个
         # AirtableAdapter(website),  # 不适合， 是开源仓库
-        # InsidrAdapter(website)  # 有点特殊， 需要按住按钮才能进行下一步的推进
-        # AiDirectoryAdapter(website)        # 要点击验证
+        # InsidrAdapter(website),  # 有点特殊， 需要按住按钮才能进行下一步的推进
+        # AiDirectoryAdapter(website),       # 要点击验证, 有点异常
         # AiToolNavigationAdapter(website),
         # AiHunterAdapter(website),  # 需要加点人工的操作
-
+        # AiMojoAdapter(website), # 要手动提交
+        DropYourAIAdapter(website), # 提交有问题
+        # FutureToolsAdapter(website),
+        FastpediaAdapter(website),  # 需加一点人工操作
     ]
 
     for adapter in adapters:

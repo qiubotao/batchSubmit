@@ -19,7 +19,7 @@ class AIWorthyAdapter(SubmissionAdapter):
         options.add_argument('--auto-open-devtools-for-tabs')
         
         
-        driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
+        driver_path = ChromeDriverManager().install()
         service = Service(driver_path)
         
         driver = webdriver.Chrome(service=service, options=options)

@@ -15,45 +15,21 @@ class Website:
 
 # 定义结构化数据
 my_website = Website(
-    url="https://videoaihub.ai/",
-    name="VIDEO AI HUB",
-    description="Discover the latest AI video generation technologies and tools, including Minimax AI and Luma AI. Create high-quality videos from text prompts and explore how AI is transforming video production. Join our platform for insights, tutorials, and more.",
+    url="https://videosummarizers.ai/",
+    name="Video Summarizers AI",
+    description="AI-powered video summarization tools to streamline content discovery and enhance learning",
     email="bertoltwork@gmail.com",
-    category="AI,Video Generator",
-    user_name= "Bertolt",
+    category="AI, Video Summarization",
+    user_name="Bertolt",
     user_first_name="Q",
     pricing_model="Freemium",
-    image_path="/Users/viola/Downloads/image/videoaihub/logo.png",  # 替换为实际的文件路径
-    content="""keyFeature:\n 
-- Discover various AI video generation platforms and their technologies. For example, Minimax AI excels in generating high-quality, expressive videos from complex text prompts, while Luma AI specializes in 3D generation and animation. Learn about their features, underlying technologies, strengths, and limitations.
-- Explore AI video generation tools for text-to-video and image-to-video creation. Tools like Minimax AI and Luma AI offer a range of powerful features that help users effortlessly create high-quality video content. Compare the output of different AI video generation tools.
-- Support for adding video effects, such as video effects from Pika1.5. 
-- Users can earn points by logging in, with daily logins adding points. Points can be purchased on a per-use, monthly, or yearly basis, and generating videos will consume the corresponding points.""",
-
-    
-    #  不同网站的定制化
-    category_for_aitoolnet="Video"
-
-    # 一站式 AI 视频生成信息和工具平台，支持订阅最新的 ai 视频技术资讯，支持文生视频，图生视频，添加视频特效
-    # 
-# -发现各种AI视频生成平台及其技术。例如，Minimax AI擅长从复杂文本生成高质量、富有表现力的视频，而Luma AI擅长3D生成和动画。了解它们的特性、底层技术、优点和局限性。
-# -探索AI视频生成工具，文生视频和图生视频。如Minimax AI和Luma AI，提供了一系列强大的工具和功能，帮助用户轻松创建高质量的视频内容。比较不同人工智能视频生成工具的生成结果。
-# - 支持添加视频特效。如pika1.5 的视频特效。
-# - 用户登录后增加积分，每日登录可以增加积分，支持按次，按月，按年进行购买积分， 生成视频会消费对应的积分。
+    image_path="/Users/viola/ai/videosummarizer/public/logo.png",  # 替换为实际的文件路径
+    content="""keyFeature:
+- Upload any video and instantly generate a detailed summary with AI-powered analysis. This includes a mind map, video timeline, and key moments.
+- Generate interactive mind maps that organize video content into easy-to-understand, hierarchical structures.
+- View an AI-generated video timeline that breaks down content into specific moments, allowing users to jump to key points instantly.
+- Engage with the video content through smart Q&A, where the AI answers questions based on the video's content, providing a deeper understanding.
+- Freemium model allows users to try out basic features for free and offers premium features for more advanced needs.
+""",
+    category_for_aitoolnet="Video Summarization"
 )
-
-# One-stop AI Video Generation Information and Tools Platform
-
-
-# - Discover various AI video generation platforms and their technologies. For example, Minimax AI excels in generating high-quality, expressive videos from complex text prompts, while Luma AI specializes in 3D generation and animation. Learn about their features, underlying technologies, strengths, and limitations.
-# - Explore AI video generation tools for text-to-video and image-to-video creation. Tools like Minimax AI and Luma AI offer a range of powerful features that help users effortlessly create high-quality video content. Compare the output of different AI video generation tools.
-# - Support for adding video effects, such as video effects from Pika1.5.
-# - Users can earn points by logging in, with daily logins adding points. Points can be purchased on a per-use, monthly, or yearly basis, and generating videos will consume the corresponding points.
-# https://openi.cn/addnewsite  25W 
-# https://ai-bot.cn/ 1.1M
-# https://ai-gallery.jp/  5W
-# https://aivalley.ai/submit-tool/  已移交
-# https://aishenqi.net/submit-aitool  已提交
-# https://creati.ai/submit-ai/submit-your-ai/ 已提交，待看结果  https://creati.ai/account/my-ai/
-# https://discovermyai.com/submit-tool  8K
-# https://www.aisupersmart.com/submit-tool/ 系统异常

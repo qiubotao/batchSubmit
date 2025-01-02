@@ -7,9 +7,11 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from webdriver_manager.chrome import ChromeDriverManager
 import traceback
 from submission_adapter import SubmissionAdapter
+from scraper_util import extract_website_info
 import time
 import logging
 import json
+import traceback
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -46,9 +48,41 @@ class LaunchingNextAdapter(SubmissionAdapter):
     - Network request monitoring fails
     """
     
+    def _scrape_and_populate_fields(self):
+        """
+        Use scraper utility to fetch and populate missing website fields.
+        """
+        try:
+            logger.info(f"Scraping website data from {self.website.url}...")
+            scraped_data = extract_website_info(self.website.url)
+            
+            # Populate missing fields with scraped data
+            if scraped_data.get('title') and not self.website.name:
+                self.website.name = scraped_data['title']
+                logger.info(f"Populated name from scraped title: {self.website.name}")
+            
+            if scraped_data.get('description') and not self.website.description:
+                self.website.description = scraped_data['description']
+                logger.info(f"Populated description from scraped data")
+            
+            if scraped_data.get('tags') and not self.website.category:
+                self.website.category = ', '.join(scraped_data['tags'])
+                logger.info(f"Populated category from scraped tags: {self.website.category}")
+            
+            if scraped_data.get('funding_type') and not self.website.funding_type:
+                self.website.funding_type = scraped_data['funding_type']
+                logger.info(f"Populated funding type from scraped data: {self.website.funding_type}")
+                
+        except Exception as e:
+            logger.error(f"Error during website scraping: {str(e)}")
+            logger.debug(traceback.format_exc())
+
     def submit(self, headless=False):
         driver = None
         try:
+            # Try to populate missing fields from website content
+            self._scrape_and_populate_fields()
+            
             logger.info("Initializing Chrome WebDriver...")
             options = webdriver.ChromeOptions()
             

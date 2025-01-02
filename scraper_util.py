@@ -104,7 +104,7 @@ def extract_website_info(url: str) -> Dict[str, Union[str, List[str]]]:
         desc_meta = soup.find('meta', attrs={'name': ['description', 'Description']})
         if desc_meta and isinstance(desc_meta, Tag):
             desc_text = desc_meta.get('content', '')
-            if desc_text:
+            if isinstance(desc_text, str):
                 info['description'] = desc_text.strip()
         
         # Extract tags

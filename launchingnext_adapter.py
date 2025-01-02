@@ -54,6 +54,9 @@ class LaunchingNextAdapter(SubmissionAdapter):
 
             logger.info("Form fields completed")
 
+            # Handle math captcha
+            self._handle_math_captcha(driver)
+
             # Submit form
             self._submit_form(driver)
 
@@ -103,6 +106,58 @@ class LaunchingNextAdapter(SubmissionAdapter):
             logger.info("Form submitted")
         except Exception as e:
             logger.error(f"Error submitting form: {str(e)}")
+
+    def _handle_math_captcha(self, driver):
+        """Handle the math captcha field with user assistance."""
+        try:
+            # Wait for captcha element
+            captcha_element = WebDriverWait(driver, 10).until(
+                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="math_captcha"]'))
+            )
+            
+            # Get captcha question text
+            captcha_label = driver.find_element(By.CSS_SELECTOR, 'label[for="math_captcha"]')
+            captcha_question = captcha_label.text.strip()
+            
+            # Try to parse and solve simple arithmetic
+            try:
+                # Extract numbers and operation from question (e.g., "What is 5 + 3?")
+                import re
+                numbers = re.findall(r'\d+', captcha_question)
+                operation = re.search(r'[\+\-\*\/]', captcha_question)
+                
+                if len(numbers) == 2 and operation:
+                    num1, num2 = map(int, numbers)
+                    op = operation.group()
+                    
+                    if op == '+':
+                        answer = num1 + num2
+                    elif op == '-':
+                        answer = num1 - num2
+                    elif op == '*':
+                        answer = num1 * num2
+                    elif op == '/' and num2 != 0:
+                        answer = num1 / num2
+                    else:
+                        raise ValueError("Unsupported operation")
+                        
+                    captcha_solution = str(int(answer))
+                else:
+                    raise ValueError("Could not parse captcha")
+                    
+            except Exception as e:
+                logger.warning(f"Could not automatically solve captcha: {str(e)}")
+                # Fallback to user input
+                logger.info(f"Captcha question: {captcha_question}")
+                captcha_solution = input("Please solve the math captcha: ")
+            
+            # Fill in the captcha solution
+            self._fill_form_field(driver, 'input[name="math_captcha"]', captcha_solution, "Math Captcha")
+            logger.info("Math captcha handled")
+            
+        except Exception as e:
+            logger.error(f"Error handling math captcha: {str(e)}")
+            raise
 
     def _check_submission_result(self, driver):
         """Check if the submission was successful."""

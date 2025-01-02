@@ -50,7 +50,7 @@ class TestRequestGenerator(unittest.TestCase):
         
         # Verify LaunchingNext-specific elements
         self.assertIn("https://www.launchingnext.com/submit/", code)
-        self.assertIn("'Content-Type': 'application/x-www-form-urlencoded'", code)
+        self.assertIn('"Content-Type": "application/x-www-form-urlencoded"', code)
         self.assertIn("Mozilla/5.0", code)
 
 if __name__ == '__main__':

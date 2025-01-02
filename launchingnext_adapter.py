@@ -2,8 +2,9 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+import traceback
 from submission_adapter import SubmissionAdapter
 import time
 import logging
@@ -14,24 +15,58 @@ logger = logging.getLogger(__name__)
 
 class LaunchingNextAdapter(SubmissionAdapter):
     def submit(self, headless=False):
-        options = webdriver.ChromeOptions()
-        if headless:
-            options.add_argument('--headless')
-        
-        # Default open console for debugging
-        options.add_argument('--auto-open-devtools-for-tabs')
-        
-        driver_path = ChromeDriverManager(driver_version="128.0.6613.114").install()
-        service = Service(driver_path)
-        
-        driver = webdriver.Chrome(service=service, options=options)
-        
-        logger.info("Opening LaunchingNext submission page...")
-        driver.get('https://www.launchingnext.com/submit/')
-
+        driver = None
         try:
+            logger.info("Initializing Chrome WebDriver...")
+            options = webdriver.ChromeOptions()
+            
+            # Basic options for stability
+            options.add_argument('--no-sandbox')
+            options.add_argument('--disable-dev-shm-usage')
+            options.add_argument('--disable-gpu')
+            options.add_argument('--window-size=1920,1080')
+            
+            # Headless specific configurations
+            if headless:
+                options.add_argument('--headless=new')
+                options.add_argument('--disable-software-rasterizer')
+                options.add_argument('--disable-extensions')
+            
+            # Create a temporary user data directory
+            import tempfile
+            import os
+            user_data_dir = os.path.join(tempfile.gettempdir(), f'chrome_user_data_{os.getpid()}')
+            os.makedirs(user_data_dir, exist_ok=True)
+            options.add_argument(f'--user-data-dir={user_data_dir}')
+            
+            # Add user agent to appear more like a real browser
+            options.add_argument('--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')
+            
+            # Additional stability options
+            options.add_argument('--disable-extensions')
+            options.add_argument('--disable-popup-blocking')
+            options.add_argument('--disable-blink-features=AutomationControlled')
+            
+            if headless:
+                options.add_argument('--headless=new')
+            else:
+                options.add_argument('--auto-open-devtools-for-tabs')
+            
+            # Initialize Chrome WebDriver
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=options)
+            
+            logger.info("Setting page load timeout...")
+            driver.set_page_load_timeout(30)
+            
+            logger.info("Opening LaunchingNext submission page...")
+            driver.get('https://www.launchingnext.com/submit/')
+            
             logger.info("Waiting for page to load...")
-            WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.TAG_NAME, 'form')))
+            WebDriverWait(driver, 30).until(
+                EC.presence_of_element_located((By.TAG_NAME, 'form'))
+            )
+            logger.info("Page loaded successfully")
 
             logger.info("Page loaded, filling form fields...")
 
@@ -44,13 +79,90 @@ class LaunchingNextAdapter(SubmissionAdapter):
             self._fill_form_field(driver, 'input[name="user"]', self.website.user_name, "User Name")
             self._fill_form_field(driver, 'input[name="email"]', self.website.email, "Email")
 
-            # Handle funding type radio buttons
-            if self.website.funding_type:
-                self._select_radio_button(driver, self.website.funding_type)
+            # Debug: Log all radio buttons on the page
+            logger.info("Inspecting all radio buttons on the page...")
+            radio_buttons = driver.find_elements(By.CSS_SELECTOR, 'input[type="radio"]')
+            for radio in radio_buttons:
+                try:
+                    attrs = driver.execute_script("""
+                        var items = {};
+                        for (var i = 0; i < arguments[0].attributes.length; i++) {
+                            var attr = arguments[0].attributes[i];
+                            items[attr.name] = attr.value;
+                        }
+                        return items;
+                    """, radio)
+                    logger.info(f"Found radio button: {attrs}")
+                    
+                    # Get parent element text if available
+                    parent_text = driver.execute_script("""
+                        var element = arguments[0];
+                        var parent = element.parentElement;
+                        return parent ? parent.textContent.trim() : '';
+                    """, radio)
+                    if parent_text:
+                        logger.info(f"Radio button parent text: {parent_text}")
+                except Exception as e:
+                    logger.error(f"Error inspecting radio button: {str(e)}")
 
-            # Handle board members radio button
-            board_value = "yes" if self.website.board_members else "no"
-            self._select_radio_button(driver, f"board_{board_value}")
+            # Handle funding type radio buttons with inspection results
+            if self.website.funding_type:
+                try:
+                    funding_type = self.website.funding_type.lower()
+                    logger.info(f"Attempting to select funding type: {funding_type}")
+                    
+                    # Find radio button by various attributes and parent text
+                    script = """
+                        var funding = arguments[0];
+                        var radios = document.querySelectorAll('input[type="radio"]');
+                        for (var radio of radios) {
+                            var parent = radio.parentElement;
+                            var text = parent ? parent.textContent.toLowerCase() : '';
+                            if (radio.value.toLowerCase().includes(funding) ||
+                                radio.name.toLowerCase().includes(funding) ||
+                                text.includes(funding)) {
+                                return radio;
+                            }
+                        }
+                        return null;
+                    """
+                    funding_radio = driver.execute_script(script, funding_type)
+                    if funding_radio:
+                        driver.execute_script("arguments[0].click();", funding_radio)
+                        logger.info(f"Successfully selected funding type: {funding_type}")
+                    else:
+                        logger.error(f"Could not find radio button for funding type: {funding_type}")
+                except Exception as e:
+                    logger.error(f"Failed to select funding type: {str(e)}")
+
+            # Handle board members radio button with inspection results
+            try:
+                board_value = "yes" if self.website.board_members else "no"
+                logger.info(f"Attempting to select board value: {board_value}")
+                
+                # Find radio button by various attributes and parent text
+                script = """
+                    var board = arguments[0];
+                    var radios = document.querySelectorAll('input[type="radio"]');
+                    for (var radio of radios) {
+                        var parent = radio.parentElement;
+                        var text = parent ? parent.textContent.toLowerCase() : '';
+                        if (radio.value.toLowerCase().includes(board) ||
+                            radio.name.toLowerCase().includes('board') ||
+                            text.includes('board')) {
+                            return radio;
+                        }
+                    }
+                    return null;
+                """
+                board_radio = driver.execute_script(script, board_value)
+                if board_radio: 
+                    driver.execute_script("arguments[0].click();", board_radio)
+                    logger.info(f"Successfully selected board value: {board_value}")
+                else:
+                    logger.error(f"Could not find radio button for board value: {board_value}")
+            except Exception as e:
+                logger.error(f"Failed to select board members: {str(e)}")
 
             logger.info("Form fields completed")
 
@@ -66,26 +178,85 @@ class LaunchingNextAdapter(SubmissionAdapter):
         except Exception as e:
             logger.error(f"Error during submission: {str(e)}")
         finally:
-            logger.info("Closing browser...")
-            driver.quit()
+            if driver:
+                logger.info("Closing browser...")
+                try:
+                    driver.quit()
+                except Exception as e:
+                    logger.error(f"Error closing browser: {str(e)}")
+                    # Ensure the process is terminated
+                    import os
+                    import signal
+                    try:
+                        if hasattr(driver, 'service') and driver.service.process:
+                            os.kill(driver.service.process.pid, signal.SIGTERM)
+                    except Exception as kill_error:
+                        logger.error(f"Error killing browser process: {str(kill_error)}")
 
     def _fill_form_field(self, driver, selector, value, field_name):
         """Fill a form field with the given value."""
         try:
-            field = driver.find_element(By.CSS_SELECTOR, selector)
+            # Try different selector strategies
+            selectors = [
+                (By.CSS_SELECTOR, selector),  # Original selector
+                (By.NAME, field_name.lower().replace(' ', '')),  # Try name attribute
+                (By.ID, field_name.lower().replace(' ', '')),    # Try ID attribute
+                (By.CSS_SELECTOR, f'input[placeholder*="{field_name}"]'),  # Try placeholder
+                (By.CSS_SELECTOR, f'textarea[placeholder*="{field_name}"]')  # Try textarea
+            ]
+            
+            field = None
+            for by, sel in selectors:
+                try:
+                    field = WebDriverWait(driver, 5).until(
+                        EC.presence_of_element_located((by, sel))
+                    )
+                    break
+                except:
+                    continue
+            
+            if field is None:
+                raise Exception(f"Could not find field {field_name} with any selector")
+                
             field.clear()
             field.send_keys(value)
-            logger.info(f"Filled '{field_name}' field")
+            logger.info(f"Successfully filled field {field_name}")
         except Exception as e:
             logger.error(f"Error filling '{field_name}' field: {str(e)}")
 
     def _select_radio_button(self, driver, value):
         """Select a radio button based on its value."""
         try:
-            radio = driver.find_element(By.CSS_SELECTOR, f'input[type="radio"][value="{value}"]')
+            # Try different selector strategies for radio buttons
+            selectors = [
+                (By.CSS_SELECTOR, f'input[type="radio"][value="{value}"]'),
+                (By.CSS_SELECTOR, f'input[type="radio"][name*="{value}"]'),
+                (By.XPATH, f'//input[@type="radio" and @value="{value}"]'),
+                (By.XPATH, f'//label[contains(text(), "{value}")]/input[@type="radio"]'),
+                (By.XPATH, f'//label[contains(., "{value}")]/input[@type="radio"]')
+            ]
+            
+            radio = None
+            for by, selector in selectors:
+                try:
+                    radio = WebDriverWait(driver, 5).until(
+                        EC.presence_of_element_located((by, selector))
+                    )
+                    break
+                except:
+                    continue
+            
+            if radio is None:
+                raise Exception(f"Could not find radio button {value} with any selector")
+            
             if not radio.is_selected():
-                radio.click()
-            logger.info(f"Selected radio button with value '{value}'")
+                # Try JavaScript click if regular click fails
+                try:
+                    radio.click()
+                except:
+                    driver.execute_script("arguments[0].click();", radio)
+                    
+            logger.info(f"Successfully selected radio button {value}")
         except Exception as e:
             logger.error(f"Error selecting radio button '{value}': {str(e)}")
 

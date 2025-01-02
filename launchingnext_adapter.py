@@ -3,17 +3,49 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from webdriver_manager.chrome import ChromeDriverManager
 import traceback
 from submission_adapter import SubmissionAdapter
 import time
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class LaunchingNextAdapter(SubmissionAdapter):
+    """LaunchingNext submission adapter with enhanced URL verification.
+    
+    This adapter handles form submissions to LaunchingNext.com with multiple layers
+    of URL verification:
+    
+    1. Initial Navigation:
+       - Navigates directly to https://www.launchingnext.com/submit/
+       - This is the known submission endpoint based on site structure
+    
+    2. Form Action Verification:
+       - Checks the form's action attribute after page load
+       - Logs warnings if action URL doesn't match expected pattern
+       - Helps detect if site structure changes
+    
+    3. Network Request Monitoring:
+       - Monitors actual form submission requests
+       - Verifies POST requests go to expected endpoint
+       - Provides debugging information for submission issues
+    
+    Expected Results:
+    - Form should be found at /submit/ endpoint
+    - Form action should contain 'launchingnext.com/submit'
+    - POST request should be sent to same domain
+    
+    Warnings will be logged if:
+    - Form action doesn't match expected pattern
+    - Actual submission URL differs from expected
+    - Network request monitoring fails
+    """
+    
     def submit(self, headless=False):
         driver = None
         try:
@@ -52,7 +84,9 @@ class LaunchingNextAdapter(SubmissionAdapter):
             else:
                 options.add_argument('--auto-open-devtools-for-tabs')
             
-            # Initialize Chrome WebDriver
+            # Initialize Chrome WebDriver with performance logging
+            options.set_capability('goog:loggingPrefs', {'performance': 'ALL'})
+            
             service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=service, options=options)
             
@@ -63,10 +97,18 @@ class LaunchingNextAdapter(SubmissionAdapter):
             driver.get('https://www.launchingnext.com/submit/')
             
             logger.info("Waiting for page to load...")
-            WebDriverWait(driver, 30).until(
+            form_element = WebDriverWait(driver, 30).until(
                 EC.presence_of_element_located((By.TAG_NAME, 'form'))
             )
             logger.info("Page loaded successfully")
+
+            # Verify form action URL
+            form_action = form_element.get_attribute('action')
+            logger.info(f"Form action URL found: {form_action}")
+            
+            if not form_action or "launchingnext.com/submit" not in form_action.lower():
+                logger.warning(f"Form action URL ({form_action}) does not match expected submission endpoint")
+                logger.warning("Expected URL pattern: https://www.launchingnext.com/submit/")
 
             logger.info("Page loaded, filling form fields...")
 
@@ -171,6 +213,21 @@ class LaunchingNextAdapter(SubmissionAdapter):
 
             # Submit form
             self._submit_form(driver)
+
+            # Monitor network requests
+            logger.info("Checking network requests...")
+            logs = driver.get_log('performance')
+            for entry in logs:
+                try:
+                    log = json.loads(entry['message'])['message']
+                    if 'Network.requestWillBeSent' == log['method']:
+                        request_url = log['params']['request']['url']
+                        if 'submit' in request_url.lower():
+                            logger.info(f"Detected form submission request to: {request_url}")
+                            if "launchingnext.com/submit" not in request_url.lower():
+                                logger.warning(f"Actual submission URL ({request_url}) differs from expected pattern")
+                except Exception as e:
+                    logger.debug(f"Error parsing network log: {str(e)}")
 
             # Check submission result
             self._check_submission_result(driver)

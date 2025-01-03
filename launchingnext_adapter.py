@@ -8,6 +8,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import traceback
 from submission_adapter import SubmissionAdapter
 from scraper_util import extract_website_info
+from request_generator import generate_launchingnext_request
 import time
 import logging
 import json
@@ -181,72 +182,48 @@ class LaunchingNextAdapter(SubmissionAdapter):
                 except Exception as e:
                     logger.error(f"Error inspecting radio button: {str(e)}")
 
-            # Handle funding type radio buttons with inspection results
+            # Handle funding type radio button
             if self.website.funding_type:
                 try:
-                    funding_type = self.website.funding_type.lower()
-                    logger.info(f"Attempting to select funding type: {funding_type}")
-                    
-                    # Find radio button by various attributes and parent text
-                    script = """
-                        var funding = arguments[0];
-                        var radios = document.querySelectorAll('input[type="radio"]');
-                        for (var radio of radios) {
-                            var parent = radio.parentElement;
-                            var text = parent ? parent.textContent.toLowerCase() : '';
-                            if (radio.value.toLowerCase().includes(funding) ||
-                                radio.name.toLowerCase().includes(funding) ||
-                                text.includes(funding)) {
-                                return radio;
-                            }
-                        }
-                        return null;
-                    """
-                    funding_radio = driver.execute_script(script, funding_type)
-                    if funding_radio:
-                        driver.execute_script("arguments[0].click();", funding_radio)
-                        logger.info(f"Successfully selected funding type: {funding_type}")
-                    else:
-                        logger.error(f"Could not find radio button for funding type: {funding_type}")
+                    funding_value = str(self.website.funding_type)  # e.g. "2"
+                    radio = driver.find_element(By.CSS_SELECTOR, f'input[name="funding"][type="radio"][text="{funding_value}"]')
+                    radio.click()
+                    logger.info(f"Selected funding type: {funding_value}")
                 except Exception as e:
                     logger.error(f"Failed to select funding type: {str(e)}")
 
-            # Handle board members radio button with inspection results
+            # Handle board members radio button
             try:
-                board_value = "yes" if self.website.board_members else "no"
-                logger.info(f"Attempting to select board value: {board_value}")
-                
-                # Find radio button by various attributes and parent text
-                script = """
-                    var board = arguments[0];
-                    var radios = document.querySelectorAll('input[type="radio"]');
-                    for (var radio of radios) {
-                        var parent = radio.parentElement;
-                        var text = parent ? parent.textContent.toLowerCase() : '';
-                        if (radio.value.toLowerCase().includes(board) ||
-                            radio.name.toLowerCase().includes('board') ||
-                            text.includes('board')) {
-                            return radio;
-                        }
-                    }
-                    return null;
-                """
-                board_radio = driver.execute_script(script, board_value)
-                if board_radio: 
-                    driver.execute_script("arguments[0].click();", board_radio)
-                    logger.info(f"Successfully selected board value: {board_value}")
-                else:
-                    logger.error(f"Could not find radio button for board value: {board_value}")
+                board_value = "1" if self.website.board_members else "0"
+                radio = driver.find_element(By.CSS_SELECTOR, f'input[name="boardmembers"][type="radio"][text="{board_value}"]')
+                radio.click()
+                logger.info(f"Selected board members: {board_value}")
             except Exception as e:
                 logger.error(f"Failed to select board members: {str(e)}")
 
             logger.info("Form fields completed")
 
-            # Handle math captcha
-            self._handle_math_captcha(driver)
+            # Generate and log POST request snippet for debugging
+            try:
+                request_snippet = generate_launchingnext_request(self.website)
+                logger.info("Generated POST request snippet for debugging:")
+                logger.info(request_snippet)
+            except Exception as e:
+                logger.error(f"Error generating request snippet: {str(e)}")
+                logger.debug(traceback.format_exc())
+
+            # Handle math captcha (known to be "2+3")
+            logger.info("Handling math captcha...")
+            captcha_field = driver.find_element(By.CSS_SELECTOR, 'input[name="math"]')
+            captcha_field.clear()
+            captcha_field.send_keys("5")
+            logger.info("Math captcha filled")
 
             # Submit form
-            self._submit_form(driver)
+            logger.info("Submitting form...")
+            submit_button = driver.find_element(By.CSS_SELECTOR, 'input[name="formSubmit"]')
+            submit_button.click()
+            logger.info("Form submitted")
 
             # Monitor network requests
             logger.info("Checking network requests...")
@@ -354,69 +331,19 @@ class LaunchingNextAdapter(SubmissionAdapter):
     def _submit_form(self, driver):
         """Submit the form."""
         try:
-            submit_button = driver.find_element(By.CSS_SELECTOR, 'button[type="submit"]')
-            
-            # Scroll to make button visible
-            driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
-            
-            # Wait for button to be clickable
-            WebDriverWait(driver, 10).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button[type="submit"]')))
-            
-            # Click using JavaScript
-            driver.execute_script("arguments[0].click();", submit_button)
-            
+            submit_button = driver.find_element(By.CSS_SELECTOR, 'input[name="formSubmit"]')
+            submit_button.click()
             logger.info("Form submitted")
         except Exception as e:
             logger.error(f"Error submitting form: {str(e)}")
 
     def _handle_math_captcha(self, driver):
-        """Handle the math captcha field with user assistance."""
+        """Handle the math captcha field (known to be 2+3=5)."""
         try:
-            # Wait for captcha element
-            captcha_element = WebDriverWait(driver, 10).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, 'input[name="math_captcha"]'))
-            )
-            
-            # Get captcha question text
-            captcha_label = driver.find_element(By.CSS_SELECTOR, 'label[for="math_captcha"]')
-            captcha_question = captcha_label.text.strip()
-            
-            # Try to parse and solve simple arithmetic
-            try:
-                # Extract numbers and operation from question (e.g., "What is 5 + 3?")
-                import re
-                numbers = re.findall(r'\d+', captcha_question)
-                operation = re.search(r'[\+\-\*\/]', captcha_question)
-                
-                if len(numbers) == 2 and operation:
-                    num1, num2 = map(int, numbers)
-                    op = operation.group()
-                    
-                    if op == '+':
-                        answer = num1 + num2
-                    elif op == '-':
-                        answer = num1 - num2
-                    elif op == '*':
-                        answer = num1 * num2
-                    elif op == '/' and num2 != 0:
-                        answer = num1 / num2
-                    else:
-                        raise ValueError("Unsupported operation")
-                        
-                    captcha_solution = str(int(answer))
-                else:
-                    raise ValueError("Could not parse captcha")
-                    
-            except Exception as e:
-                logger.warning(f"Could not automatically solve captcha: {str(e)}")
-                # Fallback to user input
-                logger.info(f"Captcha question: {captcha_question}")
-                captcha_solution = input("Please solve the math captcha: ")
-            
-            # Fill in the captcha solution
-            self._fill_form_field(driver, 'input[name="math_captcha"]', captcha_solution, "Math Captcha")
+            captcha_field = driver.find_element(By.CSS_SELECTOR, 'input[name="math"]')
+            captcha_field.clear()
+            captcha_field.send_keys("5")
             logger.info("Math captcha handled")
-            
         except Exception as e:
             logger.error(f"Error handling math captcha: {str(e)}")
             raise

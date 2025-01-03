@@ -45,8 +45,8 @@ def submit_to_all_platforms(website):
         # SupertoolsAdapter(website),  # 定位不到具体的元素 ， 失败
         # HumanOrNotAdapter(website)  # 已明确知道提交成功，能成功监控提交成功
         # ActiveSearchResultsAdapter(website)  # 新增的适配器
-        AitoolsdirectoryAdapter(website)
-        # LaunchingNextAdapter(website)  # 新增的适配器，支持自动填充表单和验证码处理
+        # AitoolsdirectoryAdapter(website)
+        LaunchingNextAdapter(website)  # 新增的适配器，支持自动填充表单和验证码处理
     ]
 
     for adapter in adapters:

@@ -196,13 +196,15 @@ class LaunchingNextAdapter(SubmissionAdapter):
                     logger.error(f"Failed to select funding type: {str(e)}")
 
             # Handle board members radio button
-            try:
-                board_value = "1" if self.website.board_members else "0"
-                radio = driver.find_element(By.CSS_SELECTOR, f'input[name="boardmembers"][type="radio"][text="{board_value}"]')
-                radio.click()
-                logger.info(f"Selected board members: {board_value}")
-            except Exception as e:
-                logger.error(f"Failed to select board members: {str(e)}")
+            if self.website.board_members is not None:
+                try:
+                    board_value = "1" if self.website.board_members else "0"
+                    radio = driver.find_element(By.CSS_SELECTOR, f'input[name="boardmembers"][value="{board_value}"]')
+                    # 使用 JavaScript 点击来避免元素遮挡问题
+                    driver.execute_script("arguments[0].click();", radio)
+                    logger.info(f"Selected board members: {board_value}")
+                except Exception as e:
+                    logger.error(f"Failed to select board members: {str(e)}")
 
             logger.info("Form fields completed")
 
@@ -224,9 +226,20 @@ class LaunchingNextAdapter(SubmissionAdapter):
 
             # Submit form
             logger.info("Submitting form...")
-            submit_button = driver.find_element(By.CSS_SELECTOR, 'input[name="formSubmit"]')
-            submit_button.click()
-            logger.info("Form submitted")
+            try:
+                input("请检查提交结果，按回车键关闭浏览器...")
+
+                submit_button = driver.find_element(By.CSS_SELECTOR, 'input[name="formSubmit"]')
+                # 确保元素可见
+                driver.execute_script("arguments[0].scrollIntoView(true);", submit_button)
+                # 等待一小段时间确保滚动完成
+                time.sleep(1)
+                # 使用 JavaScript 点击
+                driver.execute_script("arguments[0].click();", submit_button)
+
+                logger.info("Form submitted")
+            except Exception as e:
+                logger.error(f"Error submitting form: {str(e)}")
 
             # Monitor network requests
             logger.info("Checking network requests...")

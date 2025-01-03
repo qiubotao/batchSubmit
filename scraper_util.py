@@ -41,9 +41,16 @@ def parse_tags(html: str) -> List[str]:
     try:
         soup = BeautifulSoup(html, 'html.parser')
         
-        # Look for common tag containers
+        # First try to find meta keywords tag
+        keywords_meta = soup.find('meta', attrs={'name': 'keywords'})
+        if keywords_meta and isinstance(keywords_meta, Tag):
+            content = str(keywords_meta.get('content', ''))
+            if content:
+                tags.extend([tag.strip() for tag in content.split(',') if tag])
+        
+        # Look for other tag containers
         tag_elements = soup.find_all(['meta', 'a'], attrs={
-            'name': ['keywords', 'tags'],
+            'name': ['tags'],
             'class': ['tag', 'tags', 'keyword', 'keywords'],
             'rel': ['tag']
         })
@@ -61,8 +68,11 @@ def parse_tags(html: str) -> List[str]:
                     if tag_text:
                         tags.append(tag_text)
         
-        # Remove duplicates and empty strings
-        tags = list(set(filter(None, tags)))
+        # Remove duplicates while preserving order
+        seen = set()
+        tags = [x for x in tags if not (x in seen or seen.add(x))]
+        # Remove empty strings
+        tags = list(filter(None, tags))
         
     except Exception as e:
         logger.error(f"Error parsing tags: {str(e)}")
@@ -83,6 +93,7 @@ def extract_website_info(url: str) -> Dict[str, Union[str, List[str]]]:
         'title': '',
         'description': '',
         'tags': [],
+        'category': '',  # Added category field
         'funding_type': None
     }
     
@@ -107,8 +118,19 @@ def extract_website_info(url: str) -> Dict[str, Union[str, List[str]]]:
             if isinstance(desc_text, str):
                 info['description'] = desc_text.strip()
         
-        # Extract tags
-        info['tags'] = parse_tags(html_content)
+        # Extract meta keywords for category first
+        keywords_meta = soup.find('meta', attrs={'name': 'keywords'})
+        if keywords_meta and isinstance(keywords_meta, Tag):
+            content = str(keywords_meta.get('content', ''))
+            if content:
+                info['category'] = content
+                # Also use these keywords as tags, but allow parse_tags to handle ordering
+                info['tags'] = parse_tags(html_content)
+        else:
+            # Fallback to parsed tags if no meta keywords
+            info['tags'] = parse_tags(html_content)
+            if info['tags']:
+                info['category'] = ', '.join(info['tags'])
         
         # Look for funding information
         funding_keywords = ['bootstrapped', 'seed', 'series a', 'series b', 'acquired']

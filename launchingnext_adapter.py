@@ -66,7 +66,10 @@ class LaunchingNextAdapter(SubmissionAdapter):
                 self.website.description = scraped_data['description']
                 logger.info(f"Populated description from scraped data")
             
-            if scraped_data.get('tags') and not self.website.category:
+            if scraped_data.get('category') and not self.website.category:
+                self.website.category = scraped_data['category']
+                logger.info(f"Populated category from scraped data: {self.website.category}")
+            elif scraped_data.get('tags') and not self.website.category:
                 self.website.category = ', '.join(scraped_data['tags'])
                 logger.info(f"Populated category from scraped tags: {self.website.category}")
             
